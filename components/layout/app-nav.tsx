@@ -36,29 +36,26 @@ export function AppNav({ className }: AppNavProps) {
   return (
     <aside
       className={cn(
-        "flex min-h-screen w-full flex-col border-r border-blue-100/80 bg-white/92 px-4 py-5 text-sidebar-foreground shadow-[8px_0_30px_rgba(15,23,42,0.04)] backdrop-blur md:w-72",
+        "flex min-h-screen w-full flex-col border-r bg-sidebar px-4 py-5 text-sidebar-foreground md:w-72",
         className,
       )}
     >
-      <Link href="/dashboard" className="mb-7 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-3 transition-colors hover:bg-blue-50">
-        <span className="flex size-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-600/25">
+      <Link href="/dashboard" className="mb-7 flex items-center gap-3">
+        <span className="flex size-10 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
           <BriefcaseBusiness className="size-5" aria-hidden="true" />
         </span>
         <span>
-          <span className="block text-sm font-semibold tracking-tight text-slate-950">Workforce Ops OS</span>
-          <span className="block text-xs font-medium text-blue-700">
+          <span className="block text-sm font-semibold">Workforce Ops OS</span>
+          <span className="block text-xs text-sidebar-foreground/65">
             Operative Steuerung
           </span>
         </span>
       </Link>
 
-      <nav aria-label="Main navigation" className="grid gap-1.5">
-        {navItems.map((item, index) => (
+      <nav aria-label="Main navigation" className="grid gap-1">
+        {navItems.map((item) => (
           <Link
-            className={cn(
-              "flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-blue-100 hover:bg-blue-50 hover:text-blue-700",
-              index === 0 && "border-blue-100 bg-blue-50 text-blue-700 shadow-sm shadow-blue-100/80",
-            )}
+            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/78 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             href={item.href}
             key={item.href}
           >
