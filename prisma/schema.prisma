@@ -1,0 +1,593 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmployeeStatus {
+  announced
+  created
+  planned
+  appeared
+  active
+  no_show
+  replaced
+  sick
+  vacation
+  inactive
+}
+
+enum OnboardingStatus {
+  not_started
+  announced
+  document_received
+  card_assigned
+  customer_system_created
+  foreman_informed
+  first_workday_planned
+  first_pick_confirmed
+  active
+  no_show
+  replacement_requested
+}
+
+enum AssignmentStatus {
+  planned
+  confirmed
+  appeared
+  missed
+  replaced
+  completed
+  cancelled
+}
+
+enum TimeEntryStatus {
+  imported
+  unreviewed
+  suspicious
+  under_review
+  corrected
+  final
+  billable
+  excluded
+}
+
+enum TimeIssueStatus {
+  open
+  assigned_to_foreman
+  sent_to_customer
+  corrected
+  rejected
+  resolved
+}
+
+enum CaseStatus {
+  open
+  in_progress
+  waiting_for_partner
+  waiting_for_customer
+  waiting_for_management
+  resolved
+  cancelled
+}
+
+enum CasePriority {
+  low
+  normal
+  high
+  critical
+}
+
+enum CaseType {
+  no_show
+  time_error
+  worker_complaint
+  missing_document
+  customer_document_request
+  fuel_receipt
+  reimbursement
+  fine
+  partner_claim
+  vehicle_problem
+  customer_problem
+  other
+}
+
+model AppUser {
+  id                   String            @id @default(cuid())
+  name                 String
+  email                String?           @unique
+  role                 String
+  status               String            @default("active")
+  plannedAssignments   Assignment[]      @relation("AssignmentPlannedBy")
+  confirmedAssignments Assignment[]      @relation("AssignmentConfirmedBy")
+  ownedCases           OperationalCase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+}
+
+model Employee {
+  id                 String           @id @default(cuid())
+  firstName          String
+  lastName           String
+  displayName        String?
+  status             EmployeeStatus   @default(announced)
+  onboardingStatus   OnboardingStatus @default(not_started)
+  externalCardNumber String?
+  externalSystemId   String?
+  phone              String?
+  language           String?
+  firstWorkday       DateTime?
+  notes              String?
+
+  partnerCompanyId  String?
+  coordinatorId     String?
+  currentCustomerId String?
+  currentSiteId     String?
+  currentShiftId    String?
+  currentPositionId String?
+  accommodationId   String?
+  vehicleGroupId    String?
+
+  partnerCompany  PartnerCompany? @relation(fields: [partnerCompanyId], references: [id])
+  coordinator     Coordinator?    @relation(fields: [coordinatorId], references: [id])
+  currentCustomer Customer?       @relation(fields: [currentCustomerId], references: [id])
+  currentSite     Site?           @relation(fields: [currentSiteId], references: [id])
+  currentShift    Shift?          @relation(fields: [currentShiftId], references: [id])
+  currentPosition Position?       @relation(fields: [currentPositionId], references: [id])
+  accommodation   Accommodation?  @relation(fields: [accommodationId], references: [id])
+  vehicleGroup    VehicleGroup?   @relation("VehicleGroupMembers", fields: [vehicleGroupId], references: [id])
+
+  assignments         Assignment[]
+  restrictions        Restriction[]
+  timeEntries         TimeEntry[]
+  timeIssues          TimeIssue[]
+  cases               OperationalCase[]
+  documents           DocumentStatus[]
+  performanceMetrics  PerformanceMetric[]
+  driverVehicleGroups VehicleGroup[]      @relation("VehicleGroupDriver")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([onboardingStatus])
+  @@index([partnerCompanyId])
+  @@index([coordinatorId])
+  @@index([currentCustomerId])
+  @@index([currentSiteId])
+}
+
+model PartnerCompany {
+  id      String  @id @default(cuid())
+  name    String
+  country String?
+  status  String  @default("active")
+  notes   String?
+
+  employees    Employee[]
+  coordinators Coordinator[]
+  cases        OperationalCase[]
+  documents    DocumentStatus[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model Coordinator {
+  id    String  @id @default(cuid())
+  name  String
+  phone String?
+  email String?
+  role  String?
+  notes String?
+
+  partnerCompanyId String?
+  partnerCompany   PartnerCompany? @relation(fields: [partnerCompanyId], references: [id])
+  employees        Employee[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([partnerCompanyId])
+}
+
+model Customer {
+  id     String  @id @default(cuid())
+  name   String
+  status String  @default("active")
+  notes  String?
+
+  sites              Site[]
+  shifts             Shift[]
+  positions          Position[]
+  assignments        Assignment[]
+  customerRules      CustomerRule[]
+  timeEntries        TimeEntry[]
+  cases              OperationalCase[]
+  financialSnapshots ProjectFinancialSnapshot[]
+  employees          Employee[]
+  performanceMetrics PerformanceMetric[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model Site {
+  id      String  @id @default(cuid())
+  name    String
+  address String?
+  status  String  @default("active")
+  notes   String?
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  shifts             Shift[]
+  positions          Position[]
+  assignments        Assignment[]
+  customerRules      CustomerRule[]
+  timeEntries        TimeEntry[]
+  cases              OperationalCase[]
+  financialSnapshots ProjectFinancialSnapshot[]
+  employees          Employee[]
+  performanceMetrics PerformanceMetric[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model Shift {
+  id       String  @id @default(cuid())
+  name     String
+  startsAt String?
+  endsAt   String?
+  status   String  @default("active")
+  notes    String?
+
+  customerId String?
+  siteId     String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  site       Site?     @relation(fields: [siteId], references: [id])
+
+  assignments Assignment[]
+  employees   Employee[]
+  metrics     PerformanceMetric[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([siteId])
+}
+
+model Position {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  status      String  @default("active")
+
+  customerId String?
+  siteId     String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  site       Site?     @relation(fields: [siteId], references: [id])
+
+  assignments Assignment[]
+  employees   Employee[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([siteId])
+}
+
+model Assignment {
+  id     String           @id @default(cuid())
+  date   DateTime
+  status AssignmentStatus @default(planned)
+  notes  String?
+
+  employeeId    String
+  customerId    String
+  siteId        String?
+  shiftId       String?
+  positionId    String?
+  plannedById   String?
+  confirmedById String?
+
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  site        Site?     @relation(fields: [siteId], references: [id])
+  shift       Shift?    @relation(fields: [shiftId], references: [id])
+  position    Position? @relation(fields: [positionId], references: [id])
+  plannedBy   AppUser?  @relation("AssignmentPlannedBy", fields: [plannedById], references: [id])
+  confirmedBy AppUser?  @relation("AssignmentConfirmedBy", fields: [confirmedById], references: [id])
+
+  timeEntries TimeEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([status])
+  @@index([date, status])
+  @@index([employeeId])
+  @@index([customerId])
+  @@index([siteId])
+  @@index([plannedById])
+  @@index([confirmedById])
+}
+
+model Restriction {
+  id       String  @id @default(cuid())
+  type     String
+  severity String  @default("normal")
+  reason   String?
+  active   Boolean @default(true)
+  notes    String?
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([active])
+}
+
+model VehicleGroup {
+  id       String  @id @default(cuid())
+  name     String
+  type     String?
+  capacity Int?
+  notes    String?
+
+  driverEmployeeId String?
+  driverEmployee   Employee? @relation("VehicleGroupDriver", fields: [driverEmployeeId], references: [id])
+
+  employees Employee[]        @relation("VehicleGroupMembers")
+  cases     OperationalCase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([driverEmployeeId])
+}
+
+model Accommodation {
+  id       String  @id @default(cuid())
+  name     String
+  address  String?
+  capacity Int?
+  status   String  @default("active")
+  notes    String?
+
+  employees Employee[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model TimeEntry {
+  id             String          @id @default(cuid())
+  workDate       DateTime
+  source         String?
+  startTime      DateTime?
+  endTime        DateTime?
+  breakMinutes   Int?
+  rawHours       Float?
+  validatedHours Float?
+  status         TimeEntryStatus @default(unreviewed)
+  notes          String?
+
+  employeeId   String
+  customerId   String?
+  siteId       String?
+  assignmentId String?
+
+  employee   Employee    @relation(fields: [employeeId], references: [id])
+  customer   Customer?   @relation(fields: [customerId], references: [id])
+  site       Site?       @relation(fields: [siteId], references: [id])
+  assignment Assignment? @relation(fields: [assignmentId], references: [id])
+
+  issues TimeIssue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workDate])
+  @@index([status])
+  @@index([employeeId])
+  @@index([customerId])
+  @@index([siteId])
+  @@index([assignmentId])
+}
+
+model TimeIssue {
+  id         String          @id @default(cuid())
+  type       String
+  status     TimeIssueStatus @default(open)
+  detectedAt DateTime        @default(now())
+  assignedTo String?
+  resolution String?
+  notes      String?
+
+  timeEntryId String?
+  employeeId  String
+
+  timeEntry TimeEntry? @relation(fields: [timeEntryId], references: [id])
+  employee  Employee   @relation(fields: [employeeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([employeeId])
+  @@index([timeEntryId])
+}
+
+model CustomerRule {
+  id          String  @id @default(cuid())
+  type        String
+  name        String
+  description String?
+  active      Boolean @default(true)
+  configJson  Json?
+
+  customerId String
+  siteId     String?
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  site     Site?    @relation(fields: [siteId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([siteId])
+  @@index([type])
+  @@index([active])
+}
+
+model PerformanceMetric {
+  id         String   @id @default(cuid())
+  metricDate DateTime
+  metricType String
+  value      Float
+  unit       String?
+  source     String?
+  notes      String?
+
+  employeeId String?
+  customerId String?
+  siteId     String?
+  shiftId    String?
+
+  employee Employee? @relation(fields: [employeeId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+  site     Site?     @relation(fields: [siteId], references: [id])
+  shift    Shift?    @relation(fields: [shiftId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([metricDate])
+  @@index([metricType])
+  @@index([employeeId])
+  @@index([customerId])
+  @@index([siteId])
+  @@index([shiftId])
+}
+
+model OperationalCase {
+  id          String       @id @default(cuid())
+  type        CaseType
+  status      CaseStatus   @default(open)
+  priority    CasePriority @default(normal)
+  title       String
+  description String?
+  dueDate     DateTime?
+  amount      Float?
+  currency    String       @default("EUR")
+  nextStep    String?
+  outcome     String?
+
+  ownerId          String?
+  employeeId       String?
+  customerId       String?
+  siteId           String?
+  partnerCompanyId String?
+  vehicleGroupId   String?
+
+  owner          AppUser?        @relation(fields: [ownerId], references: [id])
+  employee       Employee?       @relation(fields: [employeeId], references: [id])
+  customer       Customer?       @relation(fields: [customerId], references: [id])
+  site           Site?           @relation(fields: [siteId], references: [id])
+  partnerCompany PartnerCompany? @relation(fields: [partnerCompanyId], references: [id])
+  vehicleGroup   VehicleGroup?   @relation(fields: [vehicleGroupId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([type])
+  @@index([status, priority])
+  @@index([ownerId])
+  @@index([employeeId])
+  @@index([customerId])
+  @@index([siteId])
+  @@index([partnerCompanyId])
+  @@index([vehicleGroupId])
+}
+
+model DocumentStatus {
+  id               String    @id @default(cuid())
+  documentType     String
+  status           String
+  validFrom        DateTime?
+  validUntil       DateTime?
+  source           String?
+  externalLocation String?
+  notes            String?
+
+  employeeId       String?
+  partnerCompanyId String?
+
+  employee       Employee?       @relation(fields: [employeeId], references: [id])
+  partnerCompany PartnerCompany? @relation(fields: [partnerCompanyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([partnerCompanyId])
+  @@index([status])
+}
+
+model ProjectFinancialSnapshot {
+  id                String   @id @default(cuid())
+  periodStart       DateTime
+  periodEnd         DateTime
+  expectedRevenue   Float?
+  directLaborCost   Float?
+  transportCost     Float?
+  accommodationCost Float?
+  overheadCost      Float?
+  otherCost         Float?
+  grossMargin       Float?
+  status            String?
+  notes             String?
+
+  customerId String
+  siteId     String?
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  site     Site?    @relation(fields: [siteId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([siteId])
+  @@index([periodStart, periodEnd])
+  @@index([status])
+}
