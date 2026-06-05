@@ -4,31 +4,31 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.18 0 0);
+  --background: oklch(0.985 0.012 255);
+  --foreground: oklch(0.13 0.035 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0 0);
+  --card-foreground: oklch(0.13 0.035 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0 0);
-  --primary: oklch(0.31 0.07 235);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.95 0.01 240);
-  --secondary-foreground: oklch(0.25 0.03 235);
-  --muted: oklch(0.95 0.01 240);
-  --muted-foreground: oklch(0.47 0.02 240);
-  --accent: oklch(0.91 0.03 210);
-  --accent-foreground: oklch(0.24 0.05 235);
+  --popover-foreground: oklch(0.13 0.035 260);
+  --primary: oklch(0.55 0.21 260);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.018 252);
+  --secondary-foreground: oklch(0.24 0.055 260);
+  --muted: oklch(0.96 0.018 252);
+  --muted-foreground: oklch(0.45 0.045 255);
+  --accent: oklch(0.94 0.045 250);
+  --accent-foreground: oklch(0.28 0.12 260);
   --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.88 0.01 240);
-  --input: oklch(0.88 0.01 240);
-  --ring: oklch(0.52 0.12 235);
-  --sidebar: oklch(0.97 0.01 240);
-  --sidebar-foreground: oklch(0.22 0.02 240);
-  --sidebar-primary: oklch(0.31 0.07 235);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.92 0.02 220);
-  --sidebar-accent-foreground: oklch(0.23 0.04 235);
-  --radius: 0.5rem;
+  --border: oklch(0.88 0.035 250);
+  --input: oklch(0.88 0.035 250);
+  --ring: oklch(0.58 0.2 260);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.2 0.045 260);
+  --sidebar-primary: oklch(0.55 0.21 260);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.045 250);
+  --sidebar-accent-foreground: oklch(0.28 0.12 260);
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -59,8 +59,8 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --font-sans: Arial, Helvetica, sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-sans: var(--font-geist-sans), Inter, Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-geist-mono), "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
 @layer base {
@@ -70,5 +70,18 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  table {
+    @apply text-sm;
+  }
+
+  thead {
+    @apply bg-blue-50/70 text-slate-700;
+  }
+
+  th {
+    @apply font-semibold tracking-tight;
   }
 }
