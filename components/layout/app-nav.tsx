@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   BadgeCheck,
   BriefcaseBusiness,
@@ -33,36 +36,45 @@ type AppNavProps = {
 };
 
 export function AppNav({ className }: AppNavProps) {
+  const pathname = usePathname();
+
   return (
     <aside
       className={cn(
-        "flex min-h-screen w-full flex-col border-r bg-sidebar px-4 py-5 text-sidebar-foreground md:w-72",
+        "flex min-h-screen w-full flex-col border-r border-blue-100 bg-white px-4 py-5 text-sidebar-foreground md:w-72",
         className,
       )}
     >
-      <Link href="/dashboard" className="mb-7 flex items-center gap-3">
-        <span className="flex size-10 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+      <Link href="/dashboard" className="mb-7 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/70 p-3">
+        <span className="flex size-10 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
           <BriefcaseBusiness className="size-5" aria-hidden="true" />
         </span>
         <span>
-          <span className="block text-sm font-semibold">Workforce Ops OS</span>
-          <span className="block text-xs text-sidebar-foreground/65">
+          <span className="block text-sm font-semibold tracking-tight text-slate-950">Workforce Ops OS</span>
+          <span className="block text-xs font-medium text-blue-700">
             Operative Steuerung
           </span>
         </span>
       </Link>
 
-      <nav aria-label="Main navigation" className="grid gap-1">
-        {navItems.map((item) => (
-          <Link
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/78 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            href={item.href}
-            key={item.href}
-          >
-            <item.icon className="size-4" aria-hidden="true" />
-            {item.label}
-          </Link>
-        ))}
+      <nav aria-label="Main navigation" className="grid gap-1.5">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+          return (
+            <Link
+              className={cn(
+                "flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-blue-100 hover:bg-blue-50 hover:text-blue-700",
+                isActive && "border-blue-100 bg-blue-50 text-blue-700",
+              )}
+              href={item.href}
+              key={item.href}
+            >
+              <item.icon className="size-4" aria-hidden="true" />
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );
